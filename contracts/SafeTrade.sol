@@ -3,11 +3,7 @@ pragma solidity ^0.8.0;
 
 import "hardhat/console.sol";
 // import "../node_modules/@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-// import "../node_modules/@openzeppelin/contracts/utils/Address.sol";
-// import "../node_modules/@openzeppelin/contracts/utils/Context.sol";
 import "./OZcontracts/contracts/token/ERC20/utils/SafeERC20.sol";
-// import "./OZcontracts/utils/Address.sol";
-// import "./OZcontracts/utils/Context.sol";
 
 
 contract SafeTrade {
@@ -15,12 +11,12 @@ contract SafeTrade {
 
     enum Status{INITIATED, MONEY_LOCKED, DISPUTE, ENDED}
 
-    Status private tradeStatus;
+    Status public tradeStatus;
     address public arbitrator;
     address payable public seller;
-    address payable private buyer;
+    address payable public buyer;
     IERC20 private currency;
-    uint256 private tokenAmount;
+    uint256 public tokenAmount;
 
     modifier arbitratorOnly() {
         require(msg.sender == arbitrator);
@@ -33,17 +29,29 @@ contract SafeTrade {
 
     function initTradeDetails(address payable _seller,
                 address payable _buyer,
-                IERC20 _currency,
                 uint256 _tokenAmount) public arbitratorOnly {
 
         require(_tokenAmount > 0, "Price must be greater than 0");
 
         seller = _seller;
         buyer = _buyer;
-        currency = _currency;
         tokenAmount = _tokenAmount;
         tradeStatus = Status.INITIATED;
     }
+
+    // function initTradeDetails(address payable _seller,
+    //             address payable _buyer,
+    //             IERC20 _currency,
+    //             uint256 _tokenAmount) public arbitratorOnly {
+
+    //     require(_tokenAmount > 0, "Price must be greater than 0");
+
+    //     seller = _seller;
+    //     buyer = _buyer;
+    //     currency = _currency;
+    //     tokenAmount = _tokenAmount;
+    //     tradeStatus = Status.INITIATED;
+    // }
 
 
     function payAndReturnChange() payable public {
@@ -54,13 +62,21 @@ contract SafeTrade {
         }
         else {
             payable(msg.sender).transfer(difference);
-            // _tradeStatus = Status.MONEY_LOCKED;
+            tradeStatus = Status.MONEY_LOCKED;
         }
         emit PaymentReceived(msg.sender, msg.value, difference);
     }
 
-    // function returnFunds(address acc) only owner
-
     // function PayAndReturnChange(IERC20 token, address account) payable {
     // }
+
+    //Buyer confirms if everything is ok with ordered product
+    // function confirmProductCompliance() returns bool {
+        // require(msg.sender == buyer)
+    // }
+
+    //Arbitrator returns funds to 
+    // function returnFunds(address acc) only owner
+
+
 }
