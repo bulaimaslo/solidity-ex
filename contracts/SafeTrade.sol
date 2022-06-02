@@ -7,16 +7,15 @@ import "./OZcontracts/contracts/token/ERC20/utils/SafeERC20.sol";
 
 
 contract SafeTrade {
-    event PaymentReceived(address from, uint256 amount, uint256 leftToPay);
-
     enum Status{INITIATED, MONEY_LOCKED, DISPUTE, ENDED}
 
     Status public tradeStatus;
     address public arbitrator;
     address payable public seller;
     address payable public buyer;
-    IERC20 private currency;
+    IERC20 private token;
     uint256 public tokenAmount;
+    uint256 public price;
 
     modifier arbitratorOnly() {
         require(msg.sender == arbitrator);
@@ -27,36 +26,45 @@ contract SafeTrade {
         arbitrator = msg.sender;
     }
 
+    receive() external payable virtual {}
+
     function initTradeDetails(address payable _seller,
                 address payable _buyer,
-                uint256 _tokenAmount) public arbitratorOnly {
+                uint256 _price) public arbitratorOnly {
 
-        require(_tokenAmount > 0, "Price must be greater than 0");
+        require(_price > 0, "Price must be greater than 0");
 
         seller = _seller;
         buyer = _buyer;
-        tokenAmount = _tokenAmount;
+        price = _price;
         tradeStatus = Status.INITIATED;
     }
 
     // function initTradeDetails(address payable _seller,
-    //             address payable _buyer,
-    //             IERC20 _currency,
-    //             uint256 _tokenAmount) public arbitratorOnly {
+    //             address payable _buyer,          
+    //             uint256 _tokenAmount,
+    //             IERC20 _token) public arbitratorOnly {
 
-    //     require(_tokenAmount > 0, "Price must be greater than 0");
+    //     require(_tokenAmount > 0, "Token amount must be greater than 0");
 
     //     seller = _seller;
     //     buyer = _buyer;
-    //     currency = _currency;
+    //     token = _token;
     //     tokenAmount = _tokenAmount;
     //     tradeStatus = Status.INITIATED;
     // }
 
 
-    function payAndReturnChange() payable public {
-        uint256 difference = tokenAmount - address(this).balance; 
 
+    function checkFunds() payable public returns(bool) {
+        console.log(tokenAmount);
+        console.log(address(this).balance);
+        
+        if (tokenAmount > address(this).balance) {
+            return false;
+        } 
+
+        uint256 difference = address(this).balance - tokenAmount; 
         if (difference == 0) {
             tradeStatus = Status.MONEY_LOCKED;
         }
@@ -64,19 +72,39 @@ contract SafeTrade {
             payable(msg.sender).transfer(difference);
             tradeStatus = Status.MONEY_LOCKED;
         }
-        emit PaymentReceived(msg.sender, msg.value, difference);
+
+        return true;
     }
 
-    // function PayAndReturnChange(IERC20 token, address account) payable {
-    // }
+    function acceptProductOrNot(bool accept) external {
+        require(msg.sender == buyer, "Only buyer");
+        if(accept) {
+            releaseFundsToSeller();
+            tradeStatus = Status.ENDED;
+        } else {   
+            tradeStatus = Status.DISPUTE;
+        }
+    }
 
-    //Buyer confirms if everything is ok with ordered product
-    // function confirmProductCompliance() returns bool {
-        // require(msg.sender == buyer)
-    // }
+    function releaseFundsToSeller() internal {
+        //return Eth or ERC20
+        if (tokenAmount == 0) {
+            payable(seller).transfer(address(this).balance);
+        } else {
+            uint256 tokenBalance = IERC20(token).balanceOf(address(this));
+            SafeERC20.safeTransfer(IERC20(token), payable(seller), tokenBalance);
+        }
+    }
 
-    //Arbitrator returns funds to 
-    // function returnFunds(address acc) only owner
+    function resolveDispute(address _disputeWinner) external arbitratorOnly {
 
+        payable(_disputeWinner).transfer(address(this).balance);
+    }
+
+    function resolveDispute(address _disputeWinner, address _token) external {
+        uint256 tokenBalance = IERC20(_token).balanceOf(address(this));
+        
+        SafeERC20.safeTransfer(IERC20(_token), payable(_disputeWinner), tokenBalance);
+    }
 
 }
