@@ -7,13 +7,13 @@ import "./OZcontracts/contracts/token/ERC20/utils/SafeERC20.sol";
 
 
 contract SafeTrade {
-    enum Status{INITIATED, MONEY_LOCKED, DISPUTE, ENDED}
+    enum Status{INITIATED, ADDED_DETAILS, MONEY_LOCKED, DISPUTE, ENDED}
 
     Status public tradeStatus;
     address public arbitrator;
     address payable public seller;
     address payable public buyer;
-    IERC20 private token;
+    IERC20 public token;
     uint256 public tokenAmount;
     uint256 public price;
 
@@ -24,6 +24,7 @@ contract SafeTrade {
 
     constructor() payable {
         arbitrator = msg.sender;
+        tradeStatus = Status.INITIATED;
     }
 
     receive() external payable virtual {}
@@ -32,29 +33,29 @@ contract SafeTrade {
                 address payable _buyer,
                 uint256 _price) public arbitratorOnly {
 
-        require(_price > 0, "Price must be greater than 0");
+        require(_price > 0 ether, "Price must be greater than 0");
+        require(tradeStatus == Status.INITIATED, "Trade details already provided");
 
         seller = _seller;
         buyer = _buyer;
         price = _price;
-        tradeStatus = Status.INITIATED;
+        tradeStatus = Status.ADDED_DETAILS;
     }
 
-    // function initTradeDetails(address payable _seller,
-    //             address payable _buyer,          
-    //             uint256 _tokenAmount,
-    //             IERC20 _token) public arbitratorOnly {
+    function initTradeDetailsErc(address payable _seller,
+                address payable _buyer,          
+                uint256 _tokenAmount,
+                IERC20 _token) public arbitratorOnly {
 
-    //     require(_tokenAmount > 0, "Token amount must be greater than 0");
+        require(_tokenAmount > 0, "Token amount must be greater than 0");
+        require(tradeStatus == Status.INITIATED, "Trade details already provided");
 
-    //     seller = _seller;
-    //     buyer = _buyer;
-    //     token = _token;
-    //     tokenAmount = _tokenAmount;
-    //     tradeStatus = Status.INITIATED;
-    // }
-
-
+        seller = _seller;
+        buyer = _buyer;
+        token = _token;
+        tokenAmount = _tokenAmount;
+        tradeStatus = Status.ADDED_DETAILS;
+    }
 
     function checkFunds() payable public returns(bool) {
         console.log(tokenAmount);
@@ -78,6 +79,8 @@ contract SafeTrade {
 
     function acceptProductOrNot(bool accept) external {
         require(msg.sender == buyer, "Only buyer");
+        require(tradeStatus == Status.ADDED_DETAILS, "Product not ready for acceptance");
+        
         if(accept) {
             releaseFundsToSeller();
             tradeStatus = Status.ENDED;
@@ -97,7 +100,6 @@ contract SafeTrade {
     }
 
     function resolveDispute(address _disputeWinner) external arbitratorOnly {
-
         payable(_disputeWinner).transfer(address(this).balance);
     }
 
