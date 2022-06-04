@@ -1,15 +1,38 @@
-# Basic Sample Hardhat Project
+# SafeTrade
+SafeTrade is a smart contract allowing users to secure the selling transaction of a physical object in exchange of Eth or any  ERC-20 token.
+ 
+## Process of the transaction
+1. Arbitrator deploys the contract and specifies trade details
+2. Buyer locks funds in the contract.
+3. Seller sends his product. \
+4a. Buyer accepts the received product. \
+5a. Funds are released to the seller. \
+4b. Buyer does not accept the state of the received product. \
+5b. Arbitrator solves the dispute and returns funds to the right person.  \
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts.
 
-Try running some of the following tasks:
+## Quickstart
 
-```shell
-npx hardhat accounts
-npx hardhat compile
-npx hardhat clean
+1. Clone the repository
+```bash
+git clone https://github.com/bulaimaslo/solidity-ex/
+cd solidity-ex
+```
+Install dependencies:
+```
+npm i
+```
+
+2. Now you can:
+ - run scripts
+```
+npx hardhat scripts/sample-script.js
+```
+- run tests
+```
 npx hardhat test
-npx hardhat node
-node scripts/sample-script.js
-npx hardhat help
+```
+- get coverage report
+```
+npx hardhat coverage
 ```
