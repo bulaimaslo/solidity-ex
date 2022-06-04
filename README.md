@@ -13,7 +13,7 @@ SafeTrade is a smart contract allowing users to secure the selling transaction o
 
 ## Quickstart
 
-1. Clone the repository
+Clone the repository
 ```bash
 git clone https://github.com/bulaimaslo/solidity-ex/
 cd solidity-ex
@@ -23,7 +23,7 @@ Install dependencies:
 npm i
 ```
 
-2. Now you can:
+Now you can:
  - run scripts
 ```
 npx hardhat scripts/sample-script.js
