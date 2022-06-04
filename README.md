@@ -1,5 +1,5 @@
 # SafeTrade
-SafeTrade is a smart contract allowing users to secure the selling transaction of a physical object in exchange of Eth or any  ERC-20 token.
+SafeTrade is a smart contract allowing users to secure the selling transaction of a physical object in exchange for Eth or any  ERC-20 token.
  
 ## Process of the transaction
 1. Arbitrator deploys the contract and specifies trade details
